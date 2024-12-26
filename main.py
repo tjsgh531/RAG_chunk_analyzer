@@ -4,6 +4,8 @@ import streamlit as st
 from huggingface_hub import login, whoami
 
 from token_counter import TokenCounter
+from sentence_similarity import SentenceSimilarity
+from topic_coherence import TopicCoherence
 
 class ChunkAnalyzer:
     def __init__(self):
@@ -20,7 +22,9 @@ class ChunkAnalyzer:
 
             # 로그인에 성공하면
             if st.session_state.hf_login:
-                self.token_count_analyzer = TokenCounter()
+                self.token_count_analyzer = TokenCounter(self.df)
+                self.sent_sim_analyzer = SentenceSimilarity(self.df)
+                self.topic_coherence_analyzer = TopicCoherence(self.df)
                 self.select_columns()
 
                 # 분석 시작
@@ -70,10 +74,22 @@ class ChunkAnalyzer:
     def start_analyze(self, start_btn):
         if st.session_state.hf_login and start_btn:
             # 토큰 수 분석
-            self.df = self.token_count_analyzer.token_count(self.df, self.selected_column)
+            token_df = self.token_count_analyzer.token_count(self.selected_column)
 
             # 토큰 수 분석 시각화
-            self.token_count_analyzer.visualize_token(self.df)
+            self.token_count_analyzer.visualize_token()
+
+            # 문장 유사도 분석
+            sim_df = self.sent_sim_analyzer.get_sent_similarity(self.selected_column)
+
+            # 문장 유사도 분석 시각화
+            self.sent_sim_analyzer.visualize_sim()
+
+            # 토픽 일관성 분석
+            topic_df = self.topic_coherence_analyzer.get_entropy_score(self.selected_column)
+
+            # 토픽 일관성 분석 시각화
+            self.topic_coherence_analyzer.visualize_entropy()
             
 
 if __name__ == '__main__':
